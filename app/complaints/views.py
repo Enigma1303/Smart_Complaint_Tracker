@@ -28,10 +28,10 @@ list=extend_schema(
             enum=[choice[0] for choice in Complaint.Category.choices]
         ),
         OpenApiParameter(
-            name="userId",
+            name="mycomplaints",
             description="Set ID  to get complaints created by the logged-in user",
             required=False,
-            type=OpenApiTypes.INT,
+            type=OpenApiTypes.BOOL,
         ),
         OpenApiParameter(
             name="ordering",
@@ -62,14 +62,16 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         queryset=Complaint.objects.all()
         status_param=self.request.query_params.get("status")
         category_param=self.request.query_params.get("category")
-        user_param=self.request.query_params.get("userId")
+        mycomplaints_param=self.request.query_params.get("mycomplaints")
 
         if status_param:
             queryset=queryset.filter(status=status_param)
         if category_param:
             queryset=queryset.filter(category=category_param)   
-        if  user_param:
-            queryset=queryset.filter(created_by=user_param)    
+        if  mycomplaints_param is not None:
+            if mycomplaints_param.lower()=="true":
+                queryset=queryset.filter(created_by=self.request.user)
+            
 
         if self.action in ["update", "partial_update", "destroy"]:
             queryset = queryset.filter(created_by=self.request.user)
