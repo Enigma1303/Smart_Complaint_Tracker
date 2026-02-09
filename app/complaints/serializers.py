@@ -12,8 +12,9 @@ class ComplaintSerializer(serializers.ModelSerializer):
             "category",
             "status",
             "created_at",
+            "urgency_score"
         ]
-        read_only_fields = ["id", "status", "created_at"]
+        read_only_fields = ["id", "status", "created_at","urgency_score"]
 
     def create(self,validated_data):
         """Create a complaint"""
