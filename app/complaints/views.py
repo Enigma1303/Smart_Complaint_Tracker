@@ -44,6 +44,9 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         if  user_param:
             queryset=queryset.filter(created_by=user_param)    
 
+        if self.action in ["update", "partial_update", "destroy"]:
+            queryset = queryset.filter(created_by=self.request.user)
+
         return queryset    
 
 
