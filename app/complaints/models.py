@@ -1,5 +1,8 @@
 from django.db import models
 from django.conf import settings
+from .constants import CATEGORY_SCORE_MAP
+import logging
+logger=logging.getLogger(__name__)
 
 class Complaint(models.Model):
     
@@ -28,15 +31,13 @@ class Complaint(models.Model):
     
 
     def calculate_urgency_score(self):
-
+        if not self.description:
+            logger.warning(
+                "Complaint has empty description while calculating Urgency"
+            )
         score=0
-        if self.category ==self.Category.ROAD:
-            score+=300
-        elif self.category== self.Category.ELECTRICITY:
-            score+=500
-        elif self.category==self.Category.WATER:
-            score+=200
 
+        score+=CATEGORY_SCORE_MAP.get(self.category,0)
         score+=len(self.description)*2
 
         return score  

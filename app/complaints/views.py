@@ -7,8 +7,14 @@ from drf_spectacular.utils import (extend_schema,
 
 from rest_framework.filters import OrderingFilter
 
+
 from .models import Complaint
 from .serializers import ComplaintSerializer,ComplaintUpdateSerializer
+
+#logger will automatically use the complaints logger which is at debug level
+
+import logging
+logger=logging.getLogger(__name__)
 
 @extend_schema_view(
 list=extend_schema(
@@ -59,10 +65,26 @@ class ComplaintViewSet(viewsets.ModelViewSet):
     ordering = ["-created_at"]
 
     def get_queryset(self):
+        
+        user = self.request.user
+        user_id = user.id if getattr(user, "is_authenticated", False) else None
+        params = self.request.query_params
+
+        logger.debug(
+        "Fetching complaints",
+        extra={
+            "action": self.action,
+            "user_id": user_id,
+            "authenticated": getattr(user, "is_authenticated", False),
+            "params": dict(params),
+        },
+    )
+
         queryset=Complaint.objects.all()
         status_param=self.request.query_params.get("status")
         category_param=self.request.query_params.get("category")
         mycomplaints_param=self.request.query_params.get("mycomplaints")
+        
 
         if status_param:
             queryset=queryset.filter(status=status_param)
@@ -82,9 +104,31 @@ class ComplaintViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ["update", "partial_update"]:
-            return ComplaintUpdateSerializer
+             serializer= ComplaintUpdateSerializer
         else:
-            return ComplaintSerializer
+            serializer= ComplaintSerializer
+        
+        logger.debug("Serializer selected",
+                     extra={
+                         "view":self.__class__.__name__,
+                         "action":self.action,
+                         "serializer":serializer.__name__,
+                         "method":self.request.method
+                     })
+        
+        return serializer
 
-    def perform_create(self,serializer):
-        serializer.save(created_by=self.request.user)
+    def perform_create(self, serializer):
+         try:
+          complaint = serializer.save(created_by=self.request.user)
+          logger.info(
+            f"Complaint created id={complaint.id} category={complaint.category}"
+        )
+         except Exception as e:
+            logger.error(
+            "Error while creating complaint",
+            exc_info=True
+        )
+            raise
+
+    

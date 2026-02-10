@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from pythonjsonlogger import jsonlogger
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -148,6 +149,64 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Smart Complaint Tracker API",
     "DESCRIPTION": "API for managing local complaints",
     "VERSION": "1.0.0",
+}
+
+
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+     "formatters": {
+        "json": {
+            "()": jsonlogger.JsonFormatter,
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+        },
+    },
+
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
+
+    # Default fallback
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+
+    "loggers": {
+        # Django core logs
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+
+        # Django request errors (500s, etc.)
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+
+        # Your apps (IMPORTANT)
+        "complaints": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+
+        "useraccounts": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
 }
 
 
