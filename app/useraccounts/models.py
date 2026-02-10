@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+import logging
+logger=logging.getLogger(__name__)
 
 class UserManager(BaseUserManager):
     def create_user(self,email,password=None,**extra_fields):
@@ -15,6 +17,16 @@ class UserManager(BaseUserManager):
     def create_superuser(self,email,password=None,**extra_fields):
         extra_fields.setdefault("is_staff" , True)
         extra_fields.setdefault("is_superuser",True)
+
+        
+        logger.warning(
+        "Superuser creation initiated",
+        extra={
+            "event": "SUPERUSER_CREATE_ATTEMPT",
+            "email": email,
+        },
+         )
+
 
         return self.create_user(email,password,**extra_fields)
 
